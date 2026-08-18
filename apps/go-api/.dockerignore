@@ -1,7 +1,3 @@
-.git
-.gitignore
-.codegraph
-.atl
 *.test
 *_test.go
 .env
