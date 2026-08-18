@@ -1,0 +1,11 @@
+.git
+.gitignore
+.codegraph
+.atl
+*.test
+*_test.go
+.env
+.env.*
+tmp/
+dist/
+bin/
