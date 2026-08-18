@@ -1,0 +1,7 @@
+*.test
+*_test.go
+.env
+.env.*
+tmp/
+dist/
+bin/
