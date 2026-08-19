@@ -9,8 +9,8 @@ interface PresetExample {
 }
 
 const PRESETS: PresetExample[] = [
-  { label: '2x3 default', matrix: [[1, 2, 3], [4, 5, 6]] },
-  { label: '3x3 identity', matrix: [[1, 0, 0], [0, 1, 0], [0, 0, 1]] },
+  { label: '2x3 por defecto', matrix: [[1, 2, 3], [4, 5, 6]] },
+  { label: '3x3 identidad', matrix: [[1, 0, 0], [0, 1, 0], [0, 0, 1]] },
   { label: '3x3 diagonal', matrix: [[2, 0, 0], [0, 5, 0], [0, 0, -3]] },
 ];
 
@@ -64,7 +64,7 @@ export default function MatrixInput({ matrix, onChange, disabled }: MatrixInputP
     <div className="matrix-input">
       <div className="matrix-input__controls">
         <label>
-          Rows
+          Filas
           <input
             type="number"
             min={MIN_DIM}
@@ -75,7 +75,7 @@ export default function MatrixInput({ matrix, onChange, disabled }: MatrixInputP
           />
         </label>
         <label>
-          Columns
+          Columnas
           <input
             type="number"
             min={MIN_DIM}
@@ -86,12 +86,12 @@ export default function MatrixInput({ matrix, onChange, disabled }: MatrixInputP
           />
         </label>
         <button type="button" onClick={handleClear} disabled={disabled} className="btn-secondary">
-          Clear
+          Limpiar
         </button>
       </div>
 
       <div className="matrix-input__presets">
-        <span className="matrix-input__presets-label">Presets:</span>
+        <span className="matrix-input__presets-label">Ejemplos:</span>
         {PRESETS.map((preset) => (
           <button
             key={preset.label}
@@ -105,7 +105,7 @@ export default function MatrixInput({ matrix, onChange, disabled }: MatrixInputP
         ))}
       </div>
 
-      <div className="matrix-input__grid" role="table" aria-label="Matrix cell editor">
+      <div className="matrix-input__grid" role="table" aria-label="Editor de celdas de la matriz">
         {matrix.map((row, rowIdx) => (
           <div className="matrix-input__row" role="row" key={rowIdx}>
             {row.map((value, colIdx) => (
@@ -117,7 +117,7 @@ export default function MatrixInput({ matrix, onChange, disabled }: MatrixInputP
                 value={value}
                 disabled={disabled}
                 onChange={(e) => handleCellChange(rowIdx, colIdx, e.target.value)}
-                aria-label={`row ${rowIdx + 1} column ${colIdx + 1}`}
+                aria-label={`fila ${rowIdx + 1} columna ${colIdx + 1}`}
               />
             ))}
           </div>
