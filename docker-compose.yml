@@ -1,0 +1,25 @@
+services:
+  node-api:
+    build: ./apps/node-api
+    ports:
+      - "3001:3001"
+
+  go-api:
+    build: ./apps/go-api
+    environment:
+      NODE_API_URL: http://node-api:3001
+      NODE_API_PATH: /api/v1/statistics
+    ports:
+      - "3000:3000"
+    depends_on:
+      - node-api
+
+  web:
+    build:
+      context: ./apps/web
+      args:
+        VITE_GO_API_URL: http://localhost:3000
+    ports:
+      - "5173:80"
+    depends_on:
+      - go-api
