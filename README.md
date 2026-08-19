@@ -107,3 +107,15 @@ cd apps/node-api && npm install && npm run dev
 # web
 cd apps/web && npm install && npm run dev
 ```
+
+## Nota sobre los archivos `.env`
+
+Los archivos `.env` (y sus `.env.example`) de este repo se dejan versionados
+a propósito, únicamente para que el challenge sea fácil de levantar y
+evaluar sin pasos adicionales de configuración. En un entorno real esto
+**no debería hacerse**: los `.env` no van al control de versiones (se
+excluyen vía `.gitignore`) porque suelen terminar conteniendo secretos,
+credenciales o configuración sensible por entorno, y cada ambiente
+(local/staging/prod) gestiona los suyos por fuera del repo — por ejemplo
+con un secret manager, variables de entorno inyectadas por el orquestador,
+o un vault.
