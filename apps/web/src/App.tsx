@@ -17,20 +17,20 @@ const DEFAULT_MATRIX: Matrix = [
 
 function validateMatrix(matrix: Matrix): string | null {
   if (matrix.length === 0) {
-    return 'The matrix must have at least one row.';
+    return 'La matriz debe tener al menos una fila.';
   }
   if (matrix.some((row) => row.length === 0)) {
-    return 'Every row must have at least one column.';
+    return 'Cada fila debe tener al menos una columna.';
   }
   const width = matrix[0].length;
   if (matrix.some((row) => row.length !== width)) {
-    return 'All rows must have the same number of columns.';
+    return 'Todas las filas deben tener la misma cantidad de columnas.';
   }
   for (let i = 0; i < matrix.length; i++) {
     for (let j = 0; j < matrix[i].length; j++) {
       const value = matrix[i][j];
       if (typeof value !== 'number' || Number.isNaN(value) || !Number.isFinite(value)) {
-        return `Cell (row ${i + 1}, column ${j + 1}) must be a finite number.`;
+        return `La celda (fila ${i + 1}, columna ${j + 1}) debe ser un número finito.`;
       }
     }
   }
@@ -67,7 +67,7 @@ export default function App() {
       if (err instanceof MatrixApiError) {
         setError(err);
       } else {
-        setError(new MatrixApiError('Unexpected error while contacting the API.', 'UNKNOWN_ERROR'));
+        setError(new MatrixApiError('Error inesperado al contactar la API.', 'UNKNOWN_ERROR'));
       }
     } finally {
       setLoading(false);
@@ -77,11 +77,11 @@ export default function App() {
   return (
     <div className="app">
       <header className="app__header">
-        <h1>Matrix QR &amp; Statistics</h1>
+        <h1>QR y Estadísticas de Matriz</h1>
         <p>
-          Enter a matrix, rotate it 90° clockwise, compute its QR factorization, and view pooled
-          statistics — all served by <code>apps/go-api</code>, which internally forwards results to{' '}
-          <code>apps/node-api</code>.
+          Ingrese una matriz, rótela 90° en sentido horario, calcule su factorización QR y
+          visualice las estadísticas agrupadas — todo servido por <code>apps/go-api</code>, que
+          internamente reenvía los resultados a <code>apps/node-api</code>.
         </p>
       </header>
 
@@ -92,7 +92,7 @@ export default function App() {
           {validationError && <p className="app__validation-error">{validationError}</p>}
 
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Computing…' : 'Compute QR & statistics'}
+            {loading ? 'Calculando…' : 'Calcular QR y estadísticas'}
           </button>
         </form>
 

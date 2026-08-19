@@ -6,7 +6,7 @@ interface ResultsPanelProps {
 }
 
 function BooleanBadge({ value }: { value: boolean }) {
-  return <span className={`badge ${value ? 'badge--yes' : 'badge--no'}`}>{value ? 'Yes' : 'No'}</span>;
+  return <span className={`badge ${value ? 'badge--yes' : 'badge--no'}`}>{value ? 'Sí' : 'No'}</span>;
 }
 
 export default function ResultsPanel({ result }: ResultsPanelProps) {
@@ -16,57 +16,58 @@ export default function ResultsPanel({ result }: ResultsPanelProps) {
   return (
     <div className="results-panel">
       <section className="results-panel__section">
-        <h2>Rotation &amp; QR factorization</h2>
+        <h2>Rotación y factorización QR</h2>
         <p className="results-panel__note">
-          Input matrix: {input.rows}×{input.cols}. The matrix is rotated 90° clockwise before
-          factorization; values below are shown to 4 decimal places (full precision was received
-          from the API).
+          Matriz de entrada: {input.rows}×{input.cols}. La matriz se rota 90° en sentido horario
+          antes de factorizarla; los valores de abajo se muestran con 4 decimales (la API devolvió
+          precisión completa).
         </p>
         <div className="results-panel__grid">
-          <MatrixTable title="Rotated" dims={rotated} values={rotated.values} />
+          <MatrixTable title="Rotada" dims={rotated} values={rotated.values} />
           <MatrixTable title="Q" dims={q} values={q.values} />
           <MatrixTable title="R" dims={r} values={r.values} />
         </div>
       </section>
 
       <section className="results-panel__section">
-        <h2>Statistics (from apps/node-api, via go-api)</h2>
+        <h2>Estadísticas (desde apps/node-api, vía go-api)</h2>
         <p className="results-panel__note">
-          Pooled over all elements of the rotated matrix, Q, and R combined ({stats.count} values).
+          Agrupadas sobre todos los elementos de la matriz rotada, Q y R combinados ({stats.count}{' '}
+          valores).
         </p>
         <dl className="stats-grid">
           <div className="stats-grid__item">
-            <dt>Count</dt>
+            <dt>Cantidad</dt>
             <dd>{stats.count}</dd>
           </div>
           <div className="stats-grid__item">
-            <dt>Max</dt>
+            <dt>Máximo</dt>
             <dd>{stats.max.toFixed(4)}</dd>
           </div>
           <div className="stats-grid__item">
-            <dt>Min</dt>
+            <dt>Mínimo</dt>
             <dd>{stats.min.toFixed(4)}</dd>
           </div>
           <div className="stats-grid__item">
-            <dt>Sum</dt>
+            <dt>Suma</dt>
             <dd>{stats.sum.toFixed(4)}</dd>
           </div>
           <div className="stats-grid__item">
-            <dt>Average</dt>
+            <dt>Promedio</dt>
             <dd>{stats.average.toFixed(4)}</dd>
           </div>
           <div className="stats-grid__item">
-            <dt>Is diagonal (any)</dt>
+            <dt>¿Es diagonal (alguna)?</dt>
             <dd>
               <BooleanBadge value={stats.isDiagonal} />
             </dd>
           </div>
         </dl>
 
-        <h3 className="results-panel__subheading">Per-matrix diagonal check</h3>
+        <h3 className="results-panel__subheading">Verificación de diagonal por matriz</h3>
         <dl className="stats-grid">
           <div className="stats-grid__item">
-            <dt>Rotated matrix</dt>
+            <dt>Matriz rotada</dt>
             <dd>
               <BooleanBadge value={stats.diagonal.matrix} />
             </dd>

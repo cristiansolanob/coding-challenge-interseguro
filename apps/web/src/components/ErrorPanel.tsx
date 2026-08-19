@@ -7,12 +7,12 @@ interface ErrorPanelProps {
 export default function ErrorPanel({ error }: ErrorPanelProps) {
   return (
     <div className="error-panel" role="alert">
-      <h2>Request failed</h2>
+      <h2>La solicitud falló</h2>
       <p className="error-panel__code">{error.code}</p>
       <p className="error-panel__message">{error.message}</p>
       {error.details && Object.keys(error.details).length > 0 && (
         <>
-          <h3>Details</h3>
+          <h3>Detalles</h3>
           <pre className="error-panel__details">{JSON.stringify(error.details, null, 2)}</pre>
         </>
       )}
