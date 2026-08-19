@@ -65,6 +65,11 @@ function parseMatrixField(body: Record<string, unknown>, field: FieldName): Matr
     }
   }
 
+  // Defense-in-depth: with MAX_ROWS=MAX_COLS=100, rows*cols can never exceed
+  // MAX_ELEMENTS (10000) once the two guards above have passed, so this
+  // branch is unreachable today. It stays in place so a future change to
+  // MAX_ROWS/MAX_COLS that reopens the gap is still caught automatically.
+  /* istanbul ignore next -- unreachable while MAX_ROWS * MAX_COLS === MAX_ELEMENTS */
   if (totalElements > MAX_ELEMENTS) {
     throw errors.matrixTooLarge(field);
   }

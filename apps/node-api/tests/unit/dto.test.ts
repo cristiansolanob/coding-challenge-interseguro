@@ -180,19 +180,10 @@ describe('parseStatisticsRequest — MATRIX_TOO_LARGE', () => {
     }
   });
 
-  it('throws MATRIX_TOO_LARGE when total elements exceed 10000', () => {
-    const bigMatrix = Array.from({ length: 100 }, () => Array.from({ length: 100 }, () => 1));
-    // 100x100 = 10000 elements passes; add one more row to exceed via rows guard instead:
-    // Use a matrix within 100x100 shape bounds but exceeding element count is not reachable
-    // without violating row/col caps first, so this case exercises the row-count guard path
-    // combined with element-count guard for a matrix at the edge of both.
-    const body = { ...validBody(), r: bigMatrix };
-    expect(() => parseStatisticsRequest(body)).not.toThrow();
-  });
 });
 
 describe('parseStatisticsRequest — boundary', () => {
-  it('accepts exactly 100x100 without throwing', () => {
+  it('accepts exactly 100x100 (10000 elements) without throwing — MAX_ROWS * MAX_COLS === MAX_ELEMENTS, so the dedicated totalElements guard in dto.ts is unreachable dead code given today\'s constants (documented there, kept as a future-proofing safety net)', () => {
     const matrix = Array.from({ length: 100 }, () => Array.from({ length: 100 }, () => 1));
     const body = { matrix, q: validMatrix(), r: validMatrix() };
     expect(() => parseStatisticsRequest(body)).not.toThrow();
