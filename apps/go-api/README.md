@@ -1,14 +1,15 @@
 # matrix-qr-api
 
-Go/Fiber HTTP service that accepts a rectangular matrix, rotates it 90° clockwise
-(mandatory internal step), computes its QR factorization (the required output),
-forwards the result to a downstream Node API, and returns Q/R to the caller.
+Servicio HTTP en Go/Fiber que recibe una matriz rectangular, la rota 90° en
+sentido horario (paso interno obligatorio del pipeline), calcula su
+factorización QR (la salida requerida), reenvía el resultado a una API Node
+downstream y devuelve Q/R al llamador.
 
-This resolves the challenge statement's rotation-vs-QR ambiguity in favor of QR as
-the endpoint payload: **rotation is an internal pipeline step, QR is the endpoint's
-actual deliverable.**
+Esto resuelve la ambigüedad rotación-vs-QR del enunciado del desafío a favor
+de QR como payload del endpoint: **la rotación es un paso interno del
+pipeline, QR es el entregable real del endpoint.**
 
-## Contract
+## Contrato
 
 ### `POST /api/v1/matrix/qr`
 
@@ -18,7 +19,7 @@ Request:
 { "matrix": [[1, 2, 3], [4, 5, 6]] }
 ```
 
-Success response (`200`):
+Respuesta exitosa (`200`):
 
 ```json
 {
@@ -30,101 +31,109 @@ Success response (`200`):
 }
 ```
 
-- All numeric values are JSON numbers (`float64`) at full precision — no rounding
-  in transport. Compare with epsilon `1e-9` when testing.
-- **Rotation direction is 90° clockwise**: `rotated[j][m-1-i] = input[i][j]` for an
-  `m×n` input.
-- `q` is the rotated matrix's orthonormal `n×n` factor, `r` is its upper-triangular
-  `n×m` factor (n/m here refer to the *rotated* matrix's own row/col counts).
-- `downstream.body` is the second API's JSON response, passed through byte-for-byte
-  (no reshaping, no re-serialization).
+- Todos los valores numéricos son JSON numbers (`float64`) con precisión
+  completa — sin redondeo en el transporte. Comparar con epsilon `1e-9` al
+  testear.
+- **La dirección de rotación es 90° en sentido horario**:
+  `rotated[j][m-1-i] = input[i][j]` para una entrada `m×n`.
+- `q` es el factor ortonormal `n×n` de la matriz rotada, `r` es su factor
+  triangular superior `n×m` (aquí n/m se refieren a las filas/columnas de la
+  *matriz rotada*, no de la original).
+- `downstream.body` es la respuesta JSON de la segunda API, reenviada
+  byte a byte (sin reestructurar ni reserializar).
 
-**Worked example** — a `2×3` input rotates to a `3×2` shape (rows ≥ cols), which is
-QR-eligible and returns `200`:
+**Ejemplo desarrollado** — una entrada `2×3` rota a una forma `3×2`
+(filas ≥ columnas), que es elegible para QR y devuelve `200`:
 
-- Input `[[1,2,3],[4,5,6]]` (2×3) → rotated `[[4,1],[5,2],[6,3]]` (3×2) → `200 OK`.
+- Entrada `[[1,2,3],[4,5,6]]` (2×3) → rotada `[[4,1],[5,2],[6,3]]` (3×2) →
+  `200 OK`.
 
-A `3×2` input rotates to `2×3` (rows < cols), which is **not** QR-eligible (gonum
-requires `rows ≥ cols`) and is rejected — no auto-transpose:
+Una entrada `3×2` rota a `2×3` (filas < columnas), que **no** es elegible
+para QR (gonum requiere `rows ≥ cols`) y es rechazada — sin transposición
+automática:
 
-- Input `[[1,2],[3,4],[5,6]]` (3×2) → rotated `[[5,3,1],[6,4,2]]` (2×3) → `422
-  QR_SHAPE_UNSUPPORTED`.
+- Entrada `[[1,2],[3,4],[5,6]]` (3×2) → rotada `[[5,3,1],[6,4,2]]` (2×3) →
+  `422 QR_SHAPE_UNSUPPORTED`.
 
-### Error envelope (all non-2xx)
+### Envoltorio de error (todo no-2xx)
 
 ```json
 { "error": { "code": "MATRIX_RAGGED", "message": "all rows must have the same length", "details": { "row": 2, "expected": 2, "got": 1 } } }
 ```
 
-| Code | HTTP | Trigger |
+| Código | HTTP | Disparador |
 |---|---|---|
-| `MATRIX_REQUIRED` | 400 | `matrix` missing or null |
-| `MATRIX_EMPTY` | 400 | zero rows, or any row with zero columns |
-| `MATRIX_RAGGED` | 400 | rows of differing length |
-| `MATRIX_NOT_NUMERIC` | 400 | non-numeric, `NaN`, or `±Inf` element |
-| `MATRIX_TOO_LARGE` | 400 | rows > 100, cols > 100, or elements > 10,000 |
-| `QR_SHAPE_UNSUPPORTED` | 422 | after rotation, rows < cols (gonum requires rows ≥ cols) |
-| `DOWNSTREAM_UNAVAILABLE` | 502 | downstream API unreachable, timed out, or non-2xx |
-| `INTERNAL` | 500 | recovered panic / unexpected failure |
+| `MATRIX_REQUIRED` | 400 | `matrix` ausente o null |
+| `MATRIX_EMPTY` | 400 | cero filas, o alguna fila con cero columnas |
+| `MATRIX_RAGGED` | 400 | filas de longitud distinta |
+| `MATRIX_NOT_NUMERIC` | 400 | elemento no numérico, `NaN`, o `±Inf` |
+| `MATRIX_TOO_LARGE` | 400 | filas > 100, columnas > 100, o elementos > 10,000 |
+| `QR_SHAPE_UNSUPPORTED` | 422 | tras la rotación, filas < columnas (gonum requiere rows ≥ cols) |
+| `DOWNSTREAM_UNAVAILABLE` | 502 | API downstream inalcanzable, timeout, o respuesta no-2xx |
+| `INTERNAL` | 500 | panic recuperado / falla inesperada |
 
-Pipeline order (explicit and testable): decode → validate raw input → rotate 90°
-CW → validate rotated shape for QR eligibility → factorize → call downstream →
-respond. A validation failure always short-circuits before the downstream call is
-ever made.
+Orden del pipeline (explícito y testeable): decode → validar input crudo →
+rotar 90° CW → validar forma rotada para elegibilidad QR → factorizar →
+llamar al downstream → responder. Un fallo de validación siempre corta el
+flujo antes de que se llegue a invocar el downstream.
 
 ### `GET /health`
 
-Returns `200 {"status": "ok"}` independent of downstream availability.
+Devuelve `200 {"status": "ok"}` independientemente de la disponibilidad del
+downstream.
 
-## Why gonum for QR
+## Por qué gonum para QR
 
-QR factorization uses `gonum.org/v1/gonum/mat` (`mat.QR`), which implements
-Householder reflections under the hood (LAPACK `GEQRF`/`ORGQR`) — the standard,
-numerically stable algorithm. It avoids the loss of orthogonality naive
-Gram-Schmidt exhibits on ill-conditioned input, and it is a battle-tested
-implementation rather than a hand-rolled one.
+La factorización QR usa `gonum.org/v1/gonum/mat` (`mat.QR`), que implementa
+reflexiones de Householder por debajo (LAPACK `GEQRF`/`ORGQR`) — el
+algoritmo estándar y numéricamente estable. Evita la pérdida de
+ortogonalidad que exhibe Gram-Schmidt ingenuo sobre entradas mal
+condicionadas, y es una implementación probada en batalla en lugar de una
+hecha a mano.
 
-`gonum` panics instead of returning an error when `rows < cols`. This service
-guards against that in two layers:
+`gonum` hace panic en lugar de devolver un error cuando `rows < cols`. Este
+servicio se protege contra eso en dos capas:
 
-1. An explicit `rows >= cols` shape check before calling `Factorize`, which
-   returns `422 QR_SHAPE_UNSUPPORTED` without ever invoking gonum.
-2. A `defer recover()` **inside** `internal/qr.Factorize` that converts any
-   unexpected panic into a typed error, so the panic never crosses the package
-   boundary. Fiber's `recover` middleware is kept only as a last-resort net for
-   the rest of the request pipeline, never as the primary guard.
+1. Un chequeo explícito de forma `rows >= cols` antes de llamar a
+   `Factorize`, que devuelve `422 QR_SHAPE_UNSUPPORTED` sin invocar gonum en
+   ningún momento.
+2. Un `defer recover()` **dentro de** `internal/qr.Factorize` que convierte
+   cualquier panic inesperado en un error tipado, de modo que el panic nunca
+   cruza el límite del paquete. El middleware `recover` de Fiber se mantiene
+   solo como red de último recurso para el resto del pipeline de la
+   request, nunca como la protección principal.
 
-## Project structure
+## Estructura del proyecto
 
 ```
-cmd/api/main.go            # Fiber bootstrap, config, routes, graceful shutdown
-internal/config/           # env parsing: PORT, NODE_API_URL, NODE_API_TIMEOUT, NODE_API_PATH
-internal/matrix/           # rotation.go — pure 90° CW rotation, no framework deps
-internal/qr/                # qr.go — gonum mat.QR wrapper, returns domain types
-internal/client/           # nodeapi.go — outbound client to the downstream Node API
+cmd/api/main.go            # bootstrap de Fiber, config, rutas, graceful shutdown
+internal/config/           # parsing de env: PORT, NODE_API_URL, NODE_API_TIMEOUT, NODE_API_PATH
+internal/matrix/           # rotation.go — rotación pura 90° CW, sin dependencias de framework
+internal/qr/                # qr.go — wrapper de gonum mat.QR, devuelve tipos de dominio
+internal/client/           # nodeapi.go — cliente saliente hacia la API Node downstream
 internal/http/              # handler.go, dto.go, errors.go, health.go
-internal/apierr/           # typed error taxonomy + HTTP status mapping
+internal/apierr/           # taxonomía de errores tipados + mapeo a status HTTP
 Dockerfile, .dockerignore
 ```
 
-The downstream client is declared as an interface (`DownstreamClient`) in
-`internal/http` (consumer-side), implemented by `internal/client.NodeAPI`. This
-keeps the HTTP layer's tests free of any dependency on a live Node API — they use
-a fake `DownstreamClient` instead.
+El cliente downstream se declara como una interfaz (`DownstreamClient`) en
+`internal/http` (lado consumidor), implementada por `internal/client.NodeAPI`.
+Esto mantiene los tests de la capa HTTP libres de cualquier dependencia de
+una API Node real — usan un `DownstreamClient` falso en su lugar.
 
-## Environment variables
+## Variables de entorno
 
-| Variable | Default | Description |
+| Variable | Default | Descripción |
 |---|---|---|
-| `PORT` | `3000` | HTTP port the service listens on |
-| `NODE_API_URL` | *(empty)* | Base URL of the downstream Node API |
-| `NODE_API_TIMEOUT` | `5s` | Per-request timeout for the downstream call (Go duration string, e.g. `2s`) |
-| `NODE_API_PATH` | *(empty)* | Path appended to `NODE_API_URL` for the downstream call |
+| `PORT` | `3000` | Puerto HTTP en el que escucha el servicio |
+| `NODE_API_URL` | *(vacío)* | URL base de la API Node downstream |
+| `NODE_API_TIMEOUT` | `5s` | Timeout por request para la llamada downstream (string de duración de Go, ej. `2s`) |
+| `NODE_API_PATH` | *(vacío)* | Path que se agrega a `NODE_API_URL` para la llamada downstream |
 
-## Running locally
+## Ejecución local
 
-This service lives at `apps/go-api` in the monorepo. Run all commands below
-from inside this directory.
+Este servicio vive en `apps/go-api` dentro del monorepo. Ejecutar todos los
+comandos de abajo desde este directorio.
 
 ```bash
 go run ./cmd/api
@@ -145,18 +154,23 @@ curl -X POST http://localhost:3000/api/v1/matrix/qr \
 go test ./...
 ```
 
-The test suite follows strict TDD (RED before GREEN) and covers:
-- Pure unit tests for `internal/matrix` and `internal/qr` (table-driven, epsilon `1e-9`).
-- `internal/config` env-var defaults/overrides/invalid-duration handling.
-- `internal/client` outbound behavior via `httptest` (2xx passthrough, non-2xx, timeout, malformed URL).
-- `internal/http` full pipeline integration tests via Fiber's `app.Test()` with a fake `DownstreamClient` — every documented error code, the happy path, downstream failure, and panic recovery.
+La suite de tests sigue TDD estricto (RED antes de GREEN) y cubre:
+- Tests unitarios puros para `internal/matrix` e `internal/qr`
+  (table-driven, epsilon `1e-9`).
+- Defaults/overrides/manejo de duraciones inválidas en `internal/config`.
+- Comportamiento saliente de `internal/client` vía `httptest` (passthrough
+  2xx, no-2xx, timeout, URL malformada).
+- Tests de integración del pipeline completo de `internal/http` vía
+  `app.Test()` de Fiber con un `DownstreamClient` falso — cada código de
+  error documentado, el happy path, falla del downstream y recuperación de
+  panic.
 
-## Container
+## Contenedor
 
-Multi-stage build: `golang:1.24-alpine` compiles a static binary
-(`CGO_ENABLED=0`, `-trimpath -ldflags="-s -w"`), then
-`gcr.io/distroless/static-debian12:nonroot` runs it as a non-root user with no
-shell or package manager in the final image.
+Build multi-stage: `golang:1.24-alpine` compila un binario estático
+(`CGO_ENABLED=0`, `-trimpath -ldflags="-s -w"`), luego
+`gcr.io/distroless/static-debian12:nonroot` lo ejecuta como usuario no-root
+sin shell ni package manager en la imagen final.
 
 ```bash
 docker build -t matrix-qr-api .
@@ -165,7 +179,7 @@ curl http://localhost:3000/health
 # {"status":"ok"}
 ```
 
-To point at a downstream Node API:
+Para apuntar a una API Node downstream:
 
 ```bash
 docker run --rm -p 3000:3000 \
@@ -174,11 +188,12 @@ docker run --rm -p 3000:3000 \
   matrix-qr-api
 ```
 
-## Scope notes
+## Notas de alcance
 
-- No authentication (explicitly out of scope for this change).
-- The Node/Express downstream API is a separate change; `downstream.body` is
-  passed through verbatim and its contract is pinned by this service, not
-  dictated by it.
-- No automatic transpose is ever applied to make a wide matrix QR-eligible —
-  `QR_SHAPE_UNSUPPORTED` is returned instead, by design.
+- Sin autenticación (explícitamente fuera de alcance para este cambio).
+- La API Node/Express downstream es un cambio separado; `downstream.body`
+  se reenvía verbatim y su contrato está fijado por este servicio, no
+  dictado por él.
+- Nunca se aplica una transposición automática para hacer elegible una
+  matriz ancha para QR — se devuelve `QR_SHAPE_UNSUPPORTED` en su lugar,
+  por diseño.

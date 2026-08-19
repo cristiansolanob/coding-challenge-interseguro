@@ -1,14 +1,14 @@
 # node-api
 
-Express/TypeScript HTTP service that computes pooled descriptive statistics
-(`max`/`min`/`sum`/`average`/`count`) and per-matrix diagonal detection over
-three input matrices — `matrix`, `q`, `r`.
+Servicio HTTP en Express/TypeScript que calcula estadísticas descriptivas
+agrupadas (`max`/`min`/`sum`/`average`/`count`) y detección de matriz
+diagonal por matriz, sobre tres matrices de entrada — `matrix`, `q`, `r`.
 
-This is the downstream service `apps/go-api` forwards its rotation/QR
-result to; this service's own contract is defined and tested independently
-of that caller.
+Este es el servicio downstream al que `apps/go-api` reenvía su resultado de
+rotación/QR; el contrato de este servicio está definido y testeado de forma
+independiente de ese llamador.
 
-## Contract
+## Contrato
 
 ### `POST /api/v1/statistics`
 
@@ -22,7 +22,7 @@ Request:
 }
 ```
 
-Success response (`200`):
+Respuesta exitosa (`200`):
 
 ```json
 {
@@ -36,99 +36,104 @@ Success response (`200`):
 }
 ```
 
-- **Pooled statistics, not per-matrix**: `max`/`min`/`sum`/`average`/`count`
-  are computed over one combined pool of every element of `matrix`, `q`,
-  and `r` together — not three separate results. `count` is returned
-  explicitly so the pooling is self-documenting to a caller.
-- **Diagonal semantics**: `diagonal.{matrix,q,r}` reports whether each
-  input, individually, is a diagonal matrix (square, with every
-  off-diagonal element within `EPSILON` of zero). `isDiagonal` at the top
-  level is the logical OR of those three — `true` if *at least one* of the
-  three inputs is diagonal. A non-square matrix is never an error; it
-  simply reports `false` for that field.
-- All numeric values are JSON numbers (`number`) at full precision — no
-  rounding in transport.
+- **Estadísticas agrupadas, no por matriz**: `max`/`min`/`sum`/`average`/
+  `count` se calculan sobre un único pool combinado con todos los elementos
+  de `matrix`, `q` y `r` juntos — no como tres resultados separados.
+  `count` se devuelve explícitamente para que la agrupación sea
+  autodocumentada para el llamador.
+- **Semántica de diagonal**: `diagonal.{matrix,q,r}` reporta si cada
+  entrada, individualmente, es una matriz diagonal (cuadrada, con todo
+  elemento fuera de la diagonal dentro de `EPSILON` de cero). `isDiagonal`
+  a nivel superior es el OR lógico de esos tres — `true` si *al menos una*
+  de las tres entradas es diagonal. Una matriz no cuadrada nunca es un
+  error; simplemente reporta `false` para ese campo.
+- Todos los valores numéricos son JSON numbers (`number`) con precisión
+  completa — sin redondeo en el transporte.
 
-### Error envelope (all non-2xx)
+### Envoltorio de error (todo no-2xx)
 
 ```json
 { "error": { "code": "MATRIX_RAGGED", "message": "Field \"matrix\" has ragged rows: row 1 expected 2 columns, got 1.", "details": { "field": "matrix", "row": 1, "expected": 2, "got": 1 } } }
 ```
 
-| Code | HTTP | Trigger |
+| Código | HTTP | Disparador |
 |---|---|---|
-| `PAYLOAD_INVALID` | 400 | request body is not valid JSON, or exceeds the 1 MB limit |
-| `MATRIX_REQUIRED` | 400 | `matrix`/`q`/`r` missing, `null`, or not an array of arrays |
-| `MATRIX_EMPTY` | 400 | zero rows, or a row with zero columns |
-| `MATRIX_RAGGED` | 400 | rows of differing length within the same field |
-| `MATRIX_NOT_NUMERIC` | 400 | non-numeric, `NaN`, or `±Infinity` element |
-| `MATRIX_TOO_LARGE` | 400 | field has > 100 rows, > 100 columns, or > 10,000 elements |
-| `NOT_FOUND` | 404 | unmatched route |
-| `INTERNAL` | 500 | unexpected failure |
+| `PAYLOAD_INVALID` | 400 | el body de la request no es JSON válido, o excede el límite de 1 MB |
+| `MATRIX_REQUIRED` | 400 | `matrix`/`q`/`r` ausente, `null`, o no es un array de arrays |
+| `MATRIX_EMPTY` | 400 | cero filas, o una fila con cero columnas |
+| `MATRIX_RAGGED` | 400 | filas de longitud distinta dentro del mismo campo |
+| `MATRIX_NOT_NUMERIC` | 400 | elemento no numérico, `NaN`, o `±Infinity` |
+| `MATRIX_TOO_LARGE` | 400 | el campo tiene > 100 filas, > 100 columnas, o > 10,000 elementos |
+| `NOT_FOUND` | 404 | ruta no encontrada |
+| `INTERNAL` | 500 | falla inesperada |
 
-`details.field` carries which of `"matrix" | "q" | "r"` failed on every
-per-matrix error code, so the offending input is always identifiable.
+`details.field` indica cuál de `"matrix" | "q" | "r"` falló en cada código
+de error por matriz, así el input problemático siempre es identificable.
 
-Pipeline order (explicit and testable): `express.json` parse → validate
-*all three* matrices fully → compute pooled statistics → compute diagonal
-report → respond `200`. Validation never partially succeeds — a malformed
-`r` is reported even if `matrix` and `q` are both valid, and no arithmetic
-runs until validation for all three fields has completed.
+Orden del pipeline (explícito y testeable): parseo de `express.json` →
+validar las *tres* matrices por completo → calcular estadísticas agrupadas
+→ calcular el reporte de diagonal → responder `200`. La validación nunca
+tiene éxito parcial — una `r` malformada se reporta incluso si `matrix` y
+`q` son ambas válidas, y no corre ninguna aritmética hasta que la
+validación de los tres campos haya terminado.
 
 ### `GET /health`
 
-Returns `200 {"status": "ok"}`.
+Devuelve `200 {"status": "ok"}`.
 
-## Key decisions
+## Decisiones clave
 
-- **Pooled statistics over `matrix + q + r` combined** (not per-matrix):
-  confirmed scope — the response's `max`/`min`/`sum`/`average`/`count`
-  describe one pool built from every element of all three inputs in a
-  single accumulator pass, not three independent results.
-- **`EPSILON = 1e-9`** for diagonal detection: an off-diagonal element is
-  only treated as "effectively zero" when its absolute value is strictly
-  below this tolerance. Strict `=== 0` would misclassify genuinely
-  diagonal matrices, since a Householder QR factorization (as produced by
-  `apps/go-api`) leaves float noise in `Q`/`R`'s off-diagonal cells. This
-  matches the Go API's own diagonal test epsilon.
-- **Diagonal semantics — per-matrix check, global OR**: `diagonal.matrix`,
-  `diagonal.q`, `diagonal.r` are computed independently (each requires
-  square shape); the top-level `isDiagonal` is `true` if *any one* of them
-  is `true`. A non-square input reports `false` for that field without
-  raising an error.
+- **Estadísticas agrupadas sobre `matrix + q + r` combinadas** (no por
+  matriz): alcance confirmado — `max`/`min`/`sum`/`average`/`count` de la
+  respuesta describen un único pool construido con todos los elementos de
+  las tres entradas en un solo paso de acumulación, no tres resultados
+  independientes.
+- **`EPSILON = 1e-9`** para la detección de diagonal: un elemento fuera de
+  la diagonal solo se trata como "efectivamente cero" cuando su valor
+  absoluto está estrictamente por debajo de esta tolerancia. Un `=== 0`
+  estricto clasificaría mal matrices genuinamente diagonales, ya que una
+  factorización QR de Householder (como la que produce `apps/go-api`) deja
+  ruido de punto flotante en las celdas fuera de la diagonal de `Q`/`R`.
+  Esto coincide con el epsilon del propio test de diagonal de la API Go.
+- **Semántica de diagonal — chequeo por matriz, OR global**:
+  `diagonal.matrix`, `diagonal.q`, `diagonal.r` se calculan de forma
+  independiente (cada uno requiere forma cuadrada); el `isDiagonal` de
+  nivel superior es `true` si *cualquiera* de ellos es `true`. Una entrada
+  no cuadrada reporta `false` para ese campo sin lanzar un error.
 
-## Project structure
+## Estructura del proyecto
 
 ```
-src/config/env.ts          # PORT parsing: default 3001, fail-fast on invalid value
+src/config/env.ts          # parsing de PORT: default 3001, fail-fast ante valor inválido
 src/stats/types.ts         # Matrix, PoolStatistics, DiagonalReport
-src/stats/stats.ts         # poolStatistics() — single-pass pooled accumulator
+src/stats/stats.ts         # poolStatistics() — acumulador agrupado de una sola pasada
 src/stats/diagonal.ts      # EPSILON, isDiagonal(), diagonalReport()
-src/http/dto.ts            # parseStatisticsRequest() — full request validation
-src/http/errors.ts         # ApiError, error taxonomy, errorHandler, notFoundHandler
+src/http/dto.ts            # parseStatisticsRequest() — validación completa de la request
+src/http/errors.ts         # ApiError, taxonomía de errores, errorHandler, notFoundHandler
 src/http/routes.ts         # POST /api/v1/statistics, GET /health
-src/app.ts                 # createApp(cfg) factory — the test seam, no listen()
+src/app.ts                 # factory createApp(cfg) — el seam de testing, sin listen()
 src/server.ts              # loadConfig() → createApp() → listen(), graceful shutdown
 tests/unit/                # stats, diagonal, dto, env
-tests/integration/         # Supertest against createApp()
+tests/integration/         # Supertest contra createApp()
 Dockerfile, .dockerignore
 ```
 
-`src/stats/` is pure and framework-free (no Express types), so it is unit
-tested in isolation. `src/app.ts` exports `createApp(cfg): Express` as the
-single test seam — Supertest drives it in-process with no port and no
-network; only `src/server.ts` calls `.listen()`.
+`src/stats/` es puro y libre de framework (sin tipos de Express), por lo
+que se testea de forma unitaria y aislada. `src/app.ts` exporta
+`createApp(cfg): Express` como el único seam de testing — Supertest lo
+maneja in-process, sin puerto y sin red; solo `src/server.ts` llama a
+`.listen()`.
 
-## Environment variables
+## Variables de entorno
 
-| Variable | Default | Description |
+| Variable | Default | Descripción |
 |---|---|---|
-| `PORT` | `3001` | HTTP port the service listens on. A non-numeric value throws at boot (fail fast) |
+| `PORT` | `3001` | Puerto HTTP en el que escucha el servicio. Un valor no numérico lanza un error al arrancar (fail fast) |
 
-## Running locally
+## Ejecución local
 
-This service lives at `apps/node-api` in the monorepo. Run all commands
-below from inside this directory.
+Este servicio vive en `apps/node-api` dentro del monorepo. Ejecutar todos
+los comandos de abajo desde este directorio.
 
 ```bash
 npm install
@@ -150,26 +155,28 @@ curl -X POST http://localhost:3001/api/v1/statistics \
 npm test
 ```
 
-The suite follows strict TDD (RED before GREEN) and covers:
-- Pure unit tests for `src/stats/stats.ts` and `src/stats/diagonal.ts`
-  (table-driven `it.each`, epsilon boundary cases).
-- `src/http/dto.ts` — one case per error code, per field (`matrix`/`q`/`r`).
-- `src/config/env.ts` — default/override/invalid `PORT`.
-- `src/app.ts` full-pipeline integration tests via Supertest — happy path,
-  every documented error code, malformed JSON, unknown route, health check.
+La suite sigue TDD estricto (RED antes de GREEN) y cubre:
+- Tests unitarios puros para `src/stats/stats.ts` y `src/stats/diagonal.ts`
+  (`it.each` table-driven, casos límite de epsilon).
+- `src/http/dto.ts` — un caso por código de error, por campo
+  (`matrix`/`q`/`r`).
+- `src/config/env.ts` — default/override/`PORT` inválido.
+- Tests de integración del pipeline completo de `src/app.ts` vía
+  Supertest — happy path, cada código de error documentado, JSON
+  malformado, ruta desconocida, health check.
 
 ```bash
-npm run build   # tsc — type-checks and emits dist/
+npm run build   # tsc — type-checks y emite dist/
 npm run lint    # eslint flat config (typescript-eslint + prettier)
 ```
 
-## Container
+## Contenedor
 
-Multi-stage build: `deps` (npm ci, full devDependencies) → `build` (tsc →
-`dist/`) → `prod-deps` (npm ci --omit=dev) → `runtime` (`node:22-alpine`,
-non-root `USER node`). Splitting `prod-deps` from `deps` keeps the `npm ci`
-layer cached across rebuilds and leaves zero devDependencies (`typescript`,
-`jest`, …) in the final image.
+Build multi-stage: `deps` (npm ci, devDependencies completas) → `build`
+(tsc → `dist/`) → `prod-deps` (npm ci --omit=dev) → `runtime`
+(`node:22-alpine`, `USER node` no-root). Separar `prod-deps` de `deps`
+mantiene la capa de `npm ci` cacheada entre rebuilds y deja cero
+devDependencies (`typescript`, `jest`, …) en la imagen final.
 
 ```bash
 docker build -t node-api .
@@ -178,9 +185,9 @@ curl http://localhost:3001/health
 # {"status":"ok"}
 ```
 
-## Scope notes
+## Notas de alcance
 
-- No authentication (explicitly out of scope for this change).
-- This service is consumed by `apps/go-api`'s downstream client, but its
-  contract is defined and tested independently — nothing here depends on
-  the Go API.
+- Sin autenticación (explícitamente fuera de alcance para este cambio).
+- Este servicio es consumido por el cliente downstream de `apps/go-api`,
+  pero su contrato está definido y testeado de forma independiente — nada
+  aquí depende de la API Go.
