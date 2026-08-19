@@ -8,6 +8,8 @@ import {
 import MatrixInput from './components/MatrixInput';
 import ResultsPanel from './components/ResultsPanel';
 import ErrorPanel from './components/ErrorPanel';
+import ThemeToggle from './components/ThemeToggle';
+import { useTheme } from './useTheme';
 import './App.css';
 
 const DEFAULT_MATRIX: Matrix = [
@@ -38,6 +40,7 @@ function validateMatrix(matrix: Matrix): string | null {
 }
 
 export default function App() {
+  const { theme, toggleTheme } = useTheme();
   const [matrix, setMatrix] = useState<Matrix>(DEFAULT_MATRIX);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<MatrixQrResponse | null>(null);
@@ -77,7 +80,10 @@ export default function App() {
   return (
     <div className="app">
       <header className="app__header">
-        <h1>QR y Estadísticas de Matriz</h1>
+        <div className="app__header-top">
+          <h1>QR y Estadísticas de Matriz</h1>
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
+        </div>
         <p>
           Ingrese una matriz, rótela 90° en sentido horario, calcule su factorización QR y
           visualice las estadísticas agrupadas — todo servido por <code>apps/go-api</code>, que

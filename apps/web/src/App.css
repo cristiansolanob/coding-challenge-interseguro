@@ -4,9 +4,46 @@
   padding: 2rem 1.5rem 4rem;
 }
 
+.app__header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 .app__header h1 {
   font-size: 1.75rem;
   margin: 0 0 0.5rem;
+}
+
+.app__header-top h1 {
+  margin: 0;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  border-radius: var(--radius);
+  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.theme-toggle:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--ring);
+}
+
+.theme-toggle__icon {
+  display: inline-flex;
+  color: var(--primary);
 }
 
 .app__header p {

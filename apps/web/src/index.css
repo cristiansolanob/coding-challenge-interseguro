@@ -48,34 +48,97 @@
   color-scheme: light dark;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: oklch(0.1776 0 0);
-    --foreground: oklch(0.9491 0 0);
-    --card: oklch(0.2134 0 0);
-    --card-foreground: oklch(0.9491 0 0);
-    --primary: oklch(0.9247 0.0524 66.1732);
-    --primary-hover: oklch(0.8611 0.0611 66.1732);
-    --primary-foreground: oklch(0.2029 0.024 200.1962);
-    --secondary: oklch(0.3163 0.019 63.6992);
-    --secondary-foreground: oklch(0.9247 0.0524 66.1732);
-    --muted: oklch(0.252 0 0);
-    --muted-foreground: oklch(0.7699 0 0);
-    --accent: oklch(0.285 0 0);
-    --accent-foreground: oklch(0.9491 0 0);
-    --destructive: oklch(0.6271 0.1936 33.339);
-    --destructive-foreground: oklch(1 0 0);
-    --destructive-bg: oklch(0.28 0.06 33.339);
-    --success: oklch(0.7227 0.1502 149.58);
-    --success-foreground: oklch(0.18 0.02 150);
-    --success-bg: oklch(0.28 0.05 150.69);
-    --border: oklch(0.3017 0.0115 91.7467);
-    --input: oklch(0.4017 0 0);
-    --ring: oklch(0.9247 0.0524 66.1732);
+/* Dark theme tokens: applied when the user explicitly picks dark,
+   or when the system prefers dark and no explicit choice has been made. */
+[data-theme='dark'],
+:root:not([data-theme='light']) {
+  --dark-background: oklch(0.1776 0 0);
+  --dark-foreground: oklch(0.9491 0 0);
+  --dark-card: oklch(0.2134 0 0);
+  --dark-card-foreground: oklch(0.9491 0 0);
+  --dark-primary: oklch(0.9247 0.0524 66.1732);
+  --dark-primary-hover: oklch(0.8611 0.0611 66.1732);
+  --dark-primary-foreground: oklch(0.2029 0.024 200.1962);
+  --dark-secondary: oklch(0.3163 0.019 63.6992);
+  --dark-secondary-foreground: oklch(0.9247 0.0524 66.1732);
+  --dark-muted: oklch(0.252 0 0);
+  --dark-muted-foreground: oklch(0.7699 0 0);
+  --dark-accent: oklch(0.285 0 0);
+  --dark-accent-foreground: oklch(0.9491 0 0);
+  --dark-destructive: oklch(0.6271 0.1936 33.339);
+  --dark-destructive-foreground: oklch(1 0 0);
+  --dark-destructive-bg: oklch(0.28 0.06 33.339);
+  --dark-success: oklch(0.7227 0.1502 149.58);
+  --dark-success-foreground: oklch(0.18 0.02 150);
+  --dark-success-bg: oklch(0.28 0.05 150.69);
+  --dark-border: oklch(0.3017 0.0115 91.7467);
+  --dark-input: oklch(0.4017 0 0);
+  --dark-ring: oklch(0.9247 0.0524 66.1732);
 
-    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.3), 0 1px 2px -1px hsl(0 0% 0% / 0.3);
-    --shadow-md: 0 2px 4px -1px hsl(0 0% 0% / 0.35), 0 1px 3px 0px hsl(0 0% 0% / 0.3);
-    --shadow-lg: 0 4px 6px -1px hsl(0 0% 0% / 0.4), 0 1px 3px 0px hsl(0 0% 0% / 0.3);
+  --dark-shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.3), 0 1px 2px -1px hsl(0 0% 0% / 0.3);
+  --dark-shadow-md: 0 2px 4px -1px hsl(0 0% 0% / 0.35), 0 1px 3px 0px hsl(0 0% 0% / 0.3);
+  --dark-shadow-lg: 0 4px 6px -1px hsl(0 0% 0% / 0.4), 0 1px 3px 0px hsl(0 0% 0% / 0.3);
+}
+
+/* Force dark tokens when explicitly selected. */
+[data-theme='dark'] {
+  --background: var(--dark-background);
+  --foreground: var(--dark-foreground);
+  --card: var(--dark-card);
+  --card-foreground: var(--dark-card-foreground);
+  --primary: var(--dark-primary);
+  --primary-hover: var(--dark-primary-hover);
+  --primary-foreground: var(--dark-primary-foreground);
+  --secondary: var(--dark-secondary);
+  --secondary-foreground: var(--dark-secondary-foreground);
+  --muted: var(--dark-muted);
+  --muted-foreground: var(--dark-muted-foreground);
+  --accent: var(--dark-accent);
+  --accent-foreground: var(--dark-accent-foreground);
+  --destructive: var(--dark-destructive);
+  --destructive-foreground: var(--dark-destructive-foreground);
+  --destructive-bg: var(--dark-destructive-bg);
+  --success: var(--dark-success);
+  --success-foreground: var(--dark-success-foreground);
+  --success-bg: var(--dark-success-bg);
+  --border: var(--dark-border);
+  --input: var(--dark-input);
+  --ring: var(--dark-ring);
+
+  --shadow-sm: var(--dark-shadow-sm);
+  --shadow-md: var(--dark-shadow-md);
+  --shadow-lg: var(--dark-shadow-lg);
+}
+
+/* Follow the system when no explicit choice has been made. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --background: var(--dark-background);
+    --foreground: var(--dark-foreground);
+    --card: var(--dark-card);
+    --card-foreground: var(--dark-card-foreground);
+    --primary: var(--dark-primary);
+    --primary-hover: var(--dark-primary-hover);
+    --primary-foreground: var(--dark-primary-foreground);
+    --secondary: var(--dark-secondary);
+    --secondary-foreground: var(--dark-secondary-foreground);
+    --muted: var(--dark-muted);
+    --muted-foreground: var(--dark-muted-foreground);
+    --accent: var(--dark-accent);
+    --accent-foreground: var(--dark-accent-foreground);
+    --destructive: var(--dark-destructive);
+    --destructive-foreground: var(--dark-destructive-foreground);
+    --destructive-bg: var(--dark-destructive-bg);
+    --success: var(--dark-success);
+    --success-foreground: var(--dark-success-foreground);
+    --success-bg: var(--dark-success-bg);
+    --border: var(--dark-border);
+    --input: var(--dark-input);
+    --ring: var(--dark-ring);
+
+    --shadow-sm: var(--dark-shadow-sm);
+    --shadow-md: var(--dark-shadow-md);
+    --shadow-lg: var(--dark-shadow-lg);
   }
 }
 
