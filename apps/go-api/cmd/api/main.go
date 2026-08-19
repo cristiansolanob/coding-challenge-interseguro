@@ -13,8 +13,10 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"github.com/joho/godotenv"
 
 	"github.com/interseguro/matrix-qr-api/internal/client"
 	"github.com/interseguro/matrix-qr-api/internal/config"
@@ -22,6 +24,13 @@ import (
 )
 
 func main() {
+	// Optional: load apps/go-api/.env into the process environment before
+	// config.Load() reads it. Silently ignored when absent (e.g. in Docker,
+	// where env vars are injected directly) — real env vars always take
+	// precedence over .env, since godotenv.Load() never overwrites a var
+	// that is already set.
+	_ = godotenv.Load()
+
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("config: %v", err)
@@ -35,6 +44,11 @@ func main() {
 	})
 	app.Use(recover.New())
 	app.Use(requestid.New())
+	// CORS: this API has no authentication (out of scope, see README), so
+	// there are no credentials/cookies to protect; allowing any origin lets
+	// the browser-based frontend (apps/web) call it from any host/port
+	// without a separate allowlist to maintain.
+	app.Use(cors.New())
 
 	app.Get("/health", apihttp.Health)
 	app.Post("/api/v1/matrix/qr", handler.MatrixQR)
