@@ -45,7 +45,13 @@
   --color-success: var(--success);
   --color-success-bg: var(--success-bg);
 
-  color-scheme: light dark;
+  /* Keep native controls (number spinners, scrollbars) matched to the light theme by default. */
+  color-scheme: light;
+}
+
+/* Native controls follow the explicitly selected theme. */
+[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 /* Dark theme tokens: applied when the user explicitly picks dark,
@@ -113,6 +119,7 @@
 /* Follow the system when no explicit choice has been made. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
+    color-scheme: dark;
     --background: var(--dark-background);
     --foreground: var(--dark-foreground);
     --card: var(--dark-card);
