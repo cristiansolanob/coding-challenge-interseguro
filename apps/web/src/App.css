@@ -21,9 +21,10 @@
 }
 
 .app__form {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 0.25rem);
+  box-shadow: var(--shadow-sm);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -31,10 +32,10 @@
 }
 
 .app__validation-error {
-  color: var(--color-danger);
-  background: var(--color-danger-bg);
-  border: 1px solid var(--color-danger);
-  border-radius: 6px;
+  color: var(--destructive);
+  background: var(--destructive-bg);
+  border: 1px solid color-mix(in oklch, var(--destructive) 40%, transparent);
+  border-radius: var(--radius);
   padding: 0.6rem 0.9rem;
   margin: 0;
   font-size: 0.9rem;
@@ -45,44 +46,47 @@
 .btn-primary,
 .btn-secondary,
 .btn-preset {
-  border-radius: 6px;
+  border-radius: var(--radius);
   border: 1px solid transparent;
   font-size: 0.9rem;
   padding: 0.5rem 1rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .btn-primary {
   align-self: flex-start;
-  background: var(--color-primary);
-  color: #fff;
+  background: var(--primary);
+  color: var(--primary-foreground);
   font-weight: 600;
   padding: 0.65rem 1.4rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-hover);
+  background: var(--primary-hover);
 }
 
 .btn-secondary {
-  background: var(--color-surface);
-  border-color: var(--color-border);
-  color: var(--color-text);
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--foreground);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--color-bg);
+  background: var(--accent);
 }
 
 .btn-preset {
-  background: var(--color-bg);
-  border-color: var(--color-border);
-  color: var(--color-text);
+  background: var(--secondary);
+  border-color: transparent;
+  color: var(--secondary-foreground);
   font-size: 0.8rem;
+  font-weight: 500;
   padding: 0.35rem 0.75rem;
 }
 
 .btn-preset:hover:not(:disabled) {
-  background: var(--color-border);
+  background: color-mix(in oklch, var(--secondary) 85%, var(--foreground));
 }
 
 /* --- Matrix input --- */
@@ -105,15 +109,23 @@
   flex-direction: column;
   gap: 0.25rem;
   font-size: 0.8rem;
-  color: var(--color-text-muted);
+  color: var(--muted-foreground);
 }
 
 .matrix-input__controls input[type='number'] {
   width: 5rem;
   padding: 0.4rem 0.5rem;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid var(--input);
+  border-radius: calc(var(--radius) - 0.125rem);
   font-size: 0.95rem;
+}
+
+.matrix-input__controls input[type='number']:focus {
+  outline: none;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 30%, transparent);
 }
 
 .matrix-input__presets {
@@ -125,7 +137,7 @@
 
 .matrix-input__presets-label {
   font-size: 0.8rem;
-  color: var(--color-text-muted);
+  color: var(--muted-foreground);
 }
 
 .matrix-input__grid {
@@ -144,15 +156,19 @@
 .matrix-input__cell {
   width: 4.5rem;
   padding: 0.4rem 0.5rem;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid var(--input);
+  border-radius: calc(var(--radius) - 0.125rem);
   font-size: 0.9rem;
   text-align: right;
+  font-family: var(--font-mono);
 }
 
 .matrix-input__cell:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: -1px;
+  outline: none;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 30%, transparent);
 }
 
 /* --- Results --- */
@@ -164,9 +180,10 @@
 }
 
 .results-panel__section {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 0.25rem);
+  box-shadow: var(--shadow-sm);
   padding: 1.5rem;
 }
 
@@ -177,12 +194,12 @@
 
 .results-panel__subheading {
   font-size: 0.95rem;
-  color: var(--color-text-muted);
+  color: var(--muted-foreground);
   margin: 1.5rem 0 0.5rem;
 }
 
 .results-panel__note {
-  color: var(--color-text-muted);
+  color: var(--muted-foreground);
   font-size: 0.85rem;
   margin-top: -0.4rem;
 }
@@ -203,7 +220,7 @@
 }
 
 .matrix-table__dims {
-  color: var(--color-text-muted);
+  color: var(--muted-foreground);
   font-weight: 400;
 }
 
@@ -217,7 +234,7 @@
 }
 
 .matrix-table td {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border);
   padding: 0.4rem 0.6rem;
   font-family: var(--font-mono);
   font-size: 0.82rem;
@@ -233,14 +250,15 @@
 }
 
 .stats-grid__item {
-  background: var(--color-bg);
-  border-radius: 6px;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 0.6rem 0.8rem;
 }
 
 .stats-grid__item dt {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--muted-foreground);
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
@@ -262,28 +280,29 @@
 }
 
 .badge--yes {
-  background: var(--color-success-bg);
-  color: var(--color-success);
+  background: var(--success-bg);
+  color: var(--success);
 }
 
 .badge--no {
-  background: var(--color-bg);
-  color: var(--color-text-muted);
+  background: var(--muted);
+  color: var(--muted-foreground);
 }
 
 /* --- Error panel --- */
 
 .error-panel {
-  background: var(--color-danger-bg);
-  border: 1px solid var(--color-danger);
-  border-radius: 8px;
+  background: var(--destructive-bg);
+  border: 1px solid color-mix(in oklch, var(--destructive) 45%, transparent);
+  border-radius: calc(var(--radius) + 0.25rem);
+  box-shadow: var(--shadow-sm);
   padding: 1.25rem 1.5rem;
 }
 
 .error-panel h2 {
   margin-top: 0;
   font-size: 1.05rem;
-  color: var(--color-danger);
+  color: var(--destructive);
 }
 
 .error-panel__code {
@@ -297,8 +316,8 @@
 }
 
 .error-panel__details {
-  background: rgba(0, 0, 0, 0.04);
-  border-radius: 6px;
+  background: color-mix(in oklch, var(--foreground) 6%, transparent);
+  border-radius: var(--radius);
   padding: 0.75rem;
   font-size: 0.8rem;
   overflow-x: auto;
